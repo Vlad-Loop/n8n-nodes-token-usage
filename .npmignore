@@ -1,0 +1,13 @@
+node_modules/
+.vscode/
+.idea/
+*.log
+src/
+tsconfig.json
+.eslintrc.js
+.prettierrc
+gulpfile.js
+*.tgz
+.git/
+.gitignore
+
