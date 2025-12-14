@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[English](https://github.com/Vlad-Loop/n8n-nodes-token-usage/blob/master/README.md) | [Русский](https://github.com/Vlad-Loop/n8n-nodes-token-usage/blob/master/ruREADME.md)
+🇺🇸 English | [🇷🇺 Русский](https://github.com/Vlad-Loop/n8n-nodes-token-usage/blob/master/ruREADME.md)
 
 </div>
 
