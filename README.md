@@ -1,23 +1,40 @@
-# n8n-nodes-openrouter-token-tracker
+# n8n-nodes-token-usage
 
 <div align="center">
 
-[🇷🇺 Русский](https://github.com/Vlad-Loop/n8n-nodes-openrouter-token-tracker/blob/master/ruREADME.md)
+[English](https://github.com/Vlad-Loop/n8n-nodes-token-usage/blob/master/README.md) | [Русский](https://github.com/Vlad-Loop/n8n-nodes-token-usage/blob/master/ruREADME.md)
 
 </div>
 
-[![npm version](https://img.shields.io/npm/v/n8n-nodes-openrouter-token-tracker.svg)](https://www.npmjs.com/package/n8n-nodes-openrouter-token-tracker)
+[![npm version](https://img.shields.io/npm/v/n8n-nodes-token-usage.svg)](https://www.npmjs.com/package/n8n-nodes-token-usage)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Custom n8n node for tracking and calculating OpenRouter AI API token costs.
+Custom n8n nodes for tracking LLM token usage and calculating costs across multiple providers.
 
-**Why this node was created:** When using AI models through OpenRouter, it's important to track costs for budgeting and optimization. This node automatically calculates the cost of API requests based on token usage and current model pricing.
+**Why this package was created:** When using AI models in n8n workflows, it's important to track token usage and costs for budgeting and optimization. This package extracts token usage data from n8n executions via the n8n API and calculates costs using OpenRouter pricing.
 
-## Supported Features
+![Token Usage node](https://raw.githubusercontent.com/Vlad-Loop/n8n-nodes-token-usage/master/screenshots/screen-1.png)
 
-- **From Input Data** - Automatically extract model and token usage from previous node output
-- **From Generation ID** - Get exact cost from OpenRouter's billing API (most accurate)
-- **Manual Input** - Manually enter model and token counts for cost calculation
+## Nodes
+
+### Token Usage
+- **Save Execution ID** - Captures current execution ID for later token tracking
+- **Get Token Usage** - Fetches token usage data from completed executions via n8n API
+- Works with any LLM provider that reports token usage (testing was done only on OpenRouter)
+
+### Token Cost (OpenRouter)
+- Calculates LLM costs using OpenRouter pricing data
+- Returns promptCost, completionCost, and totalCost in USD
+- Works **ONLY** in conjunction with Token Usage (Get Token Usage)
+
+## Tested With
+
+This package has been tested with the following n8n AI nodes:
+- **AI Agent (+tools)**
+- **Basic LLM Chain**
+- **Guardrails**
+
+> **Important:** Cost calculation only works when the model name in n8n exactly matches the model ID in OpenRouter (e.g., `openai/gpt-4o-mini`, `anthropic/claude-3-sonnet`).
 
 ## Quick Installation
 
@@ -26,7 +43,7 @@ Custom n8n node for tracking and calculating OpenRouter AI API token costs.
 1. Open n8n
 2. Go to **Settings** > **Community Nodes**
 3. Click **Install**
-4. Enter `n8n-nodes-openrouter-token-tracker`
+4. Enter `n8n-nodes-token-usage`
 5. Click **Install**
 
 ### Via Local Development
@@ -44,7 +61,7 @@ npm link
 cd ~/.n8n
 mkdir custom && cd custom
 npm init -y
-npm link n8n-nodes-openrouter-token-tracker
+npm link n8n-nodes-token-usage
 
 # Start n8n
 n8n
@@ -52,102 +69,149 @@ n8n
 
 ## Setup
 
-1. Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
-2. In n8n, create a credential of type **OpenRouter API**
+### For Token Usage
+1. In n8n, go to **Settings** > **n8n API**
+2. Create an API key
+3. Create a credential of type **n8n API** in your workflow
+4. Enter your API key and base URL (e.g., `http://localhost:5678`)
+
+### For Token Cost (OpenRouter)
+1. Get your API key from [OpenRouter](https://openrouter.ai/keys)
+2. Create a credential of type **OpenRouter API** in your workflow
 3. Enter your API key
 
 ## Operations
 
-### 1. From Input Data (Default)
+### 1. Save Execution ID (Default)
 
-Automatically extracts model and token usage from the previous node's output. Works with any node that returns OpenRouter/OpenAI-compatible response format.
+Captures the current workflow execution ID. Use this at the end of your main workflow to save the ID for later token tracking.
 
-**Required input fields:**
-- `model` - The model ID (e.g., "openai/gpt-4o")
-- `usage.prompt_tokens` - Number of input tokens
-- `usage.completion_tokens` - Number of output tokens
-
-### 2. From Generation ID
-
-Gets the exact cost from OpenRouter's generation API. This is the most accurate method as it uses the actual billing data.
-
-**Required:**
-- Generation ID (the `id` field from OpenRouter response)
-
-### 3. Manual Input
-
-Manually enter the model and token counts to calculate costs.
-
-**Required:**
-- Model (selected from dropdown with all available models)
-- Input Tokens
-- Output Tokens
-
-## Output Example
-
-The node outputs a `tokenCost` object:
-
+**Output:**
 ```json
 {
-  "tokenCost": {
-    "model": "openai/gpt-4o",
-    "modelName": "GPT-4o",
-    "tokens": {
-      "input": 100,
-      "output": 50,
-      "total": 150
-    },
-    "costs": {
-      "inputCost": 0.00025,
-      "outputCost": 0.0005,
-      "totalCost": 0.00075,
-      "formatted": "$0.000750"
-    },
-    "pricing": {
-      "promptPricePerToken": 0.0000025,
-      "completionPricePerToken": 0.00001,
-      "promptPricePerMillion": 2.5,
-      "completionPricePerMillion": 10,
-      "source": "models_api"
-    },
-    "metadata": {
-      "timestamp": "2024-01-15T10:30:00.000Z"
+  "execution_id": "267"
+}
+```
+
+### 2. Get Token Usage
+
+Fetches token usage data from a completed execution. This operation calls the n8n API to retrieve execution data and extracts LLM token usage from `ai_languageModel` outputs.
+
+**Required:**
+- Execution ID (from the Save operation or any other source)
+
+**Output:**
+```json
+{
+  "execution_id": "267",
+  "totalTokenUsage": {
+    "promptTokens": 13,
+    "completionTokens": 20,
+    "totalTokens": 33
+  },
+  "llmCalls": [
+    {
+      "nodeName": "OpenAI Chat Model",
+      "tokenUsage": {
+        "promptTokens": 13,
+        "completionTokens": 20,
+        "totalTokens": 33
+      },
+      "model": "openai/gpt-4o-mini",
+      "messages": ["Human: Hello"],
+      "estimatedTokens": 8
     }
+  ]
+}
+```
+
+### 3. Token Cost (OpenRouter)
+
+Calculates the cost of LLM token usage using OpenRouter pricing data.
+
+**Required:**
+- Input from Token Usage (Get Token Usage)
+- OpenRouter API credentials
+
+**Output:**
+```json
+{
+  "execution_id": "267",
+  "totalTokenUsage": {
+    "promptTokens": 13,
+    "completionTokens": 20,
+    "totalTokens": 33
+  },
+  "llmCalls": [
+    {
+      "nodeName": "OpenAI Chat Model",
+      "tokenUsage": {
+        "promptTokens": 13,
+        "completionTokens": 20,
+        "totalTokens": 33
+      },
+      "model": "openai/gpt-4o-mini",
+      "messages": ["Human: Hello"],
+      "estimatedTokens": 8,
+      "cost": {
+        "promptCost": 0.00000195,
+        "completionCost": 0.00000600,
+        "totalCost": 0.00000795,
+        "currency": "USD"
+      }
+    }
+  ],
+  "totalCost": {
+    "promptCost": 0.00000195,
+    "completionCost": 0.00000600,
+    "totalCost": 0.00000795,
+    "currency": "USD"
   }
 }
 ```
 
-## Options
+## Usage Pattern
 
-- **Include Raw Response** - Include the raw API response in the output
-- **Pass Through Input** - Include the original input data in the output (enabled by default)
+The recommended pattern is to use a Sub-Workflow:
 
-## Usage Examples
+1. Place **Token Usage (Save Execution ID)** at the end of your main workflow after LLM nodes
+2. Pass the `execution_id` to a Sub-Workflow
+3. In the Sub-Workflow, use **Token Usage (Get Token Usage)** to fetch token data
+4. Optionally, connect **Token Cost (OpenRouter)** to calculate costs
+5. The Sub-Workflow runs after the main execution completes
 
-### Track costs from OpenRouter Chat
+### Example Workflow
+
 ```
-[OpenRouter Chat] → [Token Cost Tracker] → [Google Sheets]
+Main Workflow:
+[Trigger] → [AI Agent / Chat Model] → [Token Usage (Save)] → [Execute Sub-Workflow]
+
+Sub-Workflow:
+[Receive execution_id] → [Token Usage (Get Token Usage)] → [Token Cost (OpenRouter)] → [Google Sheets / Database]
 ```
 
-### Get exact cost by Generation ID
+### Budget Alerting
+
 ```
-[HTTP Request to OpenRouter] → [Token Cost Tracker (From Generation ID)]
+[Token Cost (OpenRouter)] → [IF totalCost > threshold] → [Send Slack Alert]
 ```
 
-### Budget alerting
-```
-[Token Cost Tracker] → [IF cost > threshold] → [Send Slack Alert]
-```
+## Why Use a Sub-Workflow?
+
+The n8n API only returns complete execution data after the execution finishes. By using a Sub-Workflow, you ensure the main execution is complete before fetching token data.
 
 ## Disclaimer
 
 > [!WARNING]
-> Cost calculations are estimates based on OpenRouter API data. Always verify costs in your OpenRouter dashboard. The author is not responsible for any billing discrepancies.
+> - This package is not affiliated with n8n GmbH or OpenRouter
+> - Token usage data accuracy depends on the provider's token counting
+> - Pricing data is fetched from OpenRouter API and may change without notice
+> - Cost calculation only works when model names exactly match OpenRouter model IDs
+> - Always verify costs in your provider's dashboard for billing purposes
 
 ## Documentation
 
-- [OpenRouter Documentation](https://openrouter.ai/docs)
-- [OpenRouter API Reference](https://openrouter.ai/docs/api-reference)
+- [n8n API Documentation](https://docs.n8n.io/api/)
 - [n8n Community Nodes](https://docs.n8n.io/integrations/community-nodes/)
 
 ## Contributing
@@ -162,7 +226,7 @@ Contributions are welcome!
 ## Support and Contact
 
 - **Author**: https://t.me/vlad_loop
-- **Issues**: [GitHub Issues](https://github.com/Vlad-Loop/n8n-nodes-openrouter-token-tracker/issues)
+- **Issues**: [GitHub Issues](https://github.com/Vlad-Loop/n8n-nodes-token-usage/issues)
 
 ## License
 

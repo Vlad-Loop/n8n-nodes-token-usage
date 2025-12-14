@@ -5,32 +5,39 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2024-12-11
+## [1.0.0] - 14-12-2025
 
 ### Добавлено
-- **From Input Data** - Автоматическое извлечение модели и токенов из входных данных
-- **From Generation ID** - Получение точной стоимости через OpenRouter Generation API
-- **Manual Input** - Ручной ввод модели и количества токенов
-- Динамическая загрузка списка моделей из OpenRouter API
-- Поддержка аутентификации через OpenRouter API ключ
-- Расчет стоимости на основе актуальных цен моделей
-- Форматирование стоимости для удобного отображения
-- Опция "Pass Through Input" для передачи входных данных
-- Опция "Include Raw Response" для отладки
-- Дисклаймеры о точности расчетов в интерфейсе ноды
+
+#### Token Usage
+- **Save Execution ID** - Сохранение текущего execution ID n8n для последующего отслеживания токенов
+- **Get Token Usage** - Получение данных об использовании токенов из завершенных executions через n8n API
+- Поддержка n8n API credentials (apiKey и baseUrl)
+- Извлечение данных о токенах LLM из выводов `ai_languageModel`
+- Мультипровайдерная поддержка: работает с любым LLM провайдером (OpenAI, Anthropic, Google, Mistral и др.)
+- Возврат детальной информации о токенах: promptTokens, completionTokens, totalTokens
+- Извлечение названия модели и сообщений из данных execution
+
+#### Token Cost (OpenRouter)
+- Автоматический расчёт стоимости токенов на основе цен OpenRouter API
+- Расчёт promptCost, completionCost и totalCost в USD
+- Работает в связке с Token Usage (Get Token Usage)
+
+### Протестировано
+- AI Agent (+ tools)
+- Basic LLM Chain
+- Guardrails
+
+### Важно
+- Расчёт стоимости работает только при точном совпадении названия модели с ID модели в OpenRouter
 
 ### Документация
 - README.md на английском языке
 - ruREADME.md на русском языке
-- Примеры использования в workflow
-- Описание всех операций и параметров
 
 ---
 
 ## [Unreleased]
 
 ### Планируется
-- Кэширование цен моделей для оптимизации
-- Поддержка batch расчетов
-- Экспорт статистики расходов
-- Интеграция с Google Sheets для логирования
+- Поддержка настраиваемых цен токенов

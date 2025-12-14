@@ -1,35 +1,35 @@
 {
-  "name": "n8n-nodes-openrouter-token-tracker",
+  "name": "n8n-nodes-token-usage",
   "version": "1.0.0",
-  "description": "n8n custom node for tracking OpenRouter AI API token costs",
+  "description": "n8n community node for tracking LLM token usage across multiple providers (OpenAI, Anthropic, Google, and more)",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
-    "openrouter",
     "token",
-    "cost",
-    "tracker",
     "ai",
     "llm",
-    "api"
+    "usage",
+    "pricing",
+    "cost",
+    "openrouter"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/Vlad-Loop/n8n-nodes-openrouter-token-tracker",
+  "homepage": "https://github.com/Vlad-Loop/n8n-nodes-token-usage",
   "author": {
     "name": "Vlad Loop",
     "email": "v.tarasenko1997@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vlad-Loop/n8n-nodes-openrouter-token-tracker.git"
+    "url": "git+https://github.com/Vlad-Loop/n8n-nodes-token-usage.git"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint 'nodes/**/*.ts' 'credentials/**/*.ts' package.json",
-    "lintfix": "eslint 'nodes/**/*.ts' 'credentials/**/*.ts' package.json --fix",
+    "format": "prettier nodes --write",
+    "lint": "eslint 'nodes/**/*.ts' package.json",
+    "lintfix": "eslint 'nodes/**/*.ts' package.json --fix",
     "prepublishOnly": "npm run build && npm run lint",
     "clean": "rm -rf dist/",
     "rebuild": "npm run clean && npm run build"
@@ -39,11 +39,9 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/OpenRouterApi.credentials.js"
-    ],
     "nodes": [
-      "dist/nodes/TokenCostTracker/TokenCostTracker.node.js"
+      "dist/nodes/TokenUsage/TokenUsage.node.js",
+      "dist/nodes/AutoPriceCalculator/AutoPriceCalculator.node.js"
     ]
   },
   "devDependencies": {
