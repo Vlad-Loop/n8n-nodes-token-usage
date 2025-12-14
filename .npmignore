@@ -10,4 +10,4 @@ gulpfile.js
 *.tgz
 .git/
 .gitignore
-
+.npmrc
